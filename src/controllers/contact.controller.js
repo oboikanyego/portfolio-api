@@ -1,5 +1,6 @@
 const ContactMessage = require('../models/contact-message.model');
 const { sendContactEmail } = require('../services/mail.service');
+const { getPagination, paginatedResult } = require('../utils/pagination');
 
 exports.createContact = async (req, res) => {
   try {
@@ -50,5 +51,19 @@ exports.createContact = async (req, res) => {
       success: false,
       message: error.message || 'Failed to send message'
     });
+  }
+};
+
+exports.getContacts = async (req, res) => {
+  try {
+    const { page, limit, skip } = getPagination(req.query);
+    const [contacts, total] = await Promise.all([
+      ContactMessage.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      ContactMessage.countDocuments()
+    ]);
+    return res.json(paginatedResult(contacts, total, page, limit));
+  } catch (error) {
+    console.error('getContacts error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to load contact enquiries.' });
   }
 };
