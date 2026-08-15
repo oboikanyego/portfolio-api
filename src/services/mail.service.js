@@ -1,4 +1,13 @@
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
+const Handlebars = require('handlebars');
+
+const compileTemplate = (fileName) => Handlebars.compile(
+  fs.readFileSync(path.join(__dirname, '..', 'templates', fileName), 'utf8')
+);
+const renderContactEmail = compileTemplate('contact-email.hbs');
+const renderCvRequestEmail = compileTemplate('cv-request-email.hbs');
 
 console.log('📧 Initializing mail transporter...');
 console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
@@ -32,16 +41,14 @@ async function sendContactEmail({
       from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
       to: process.env.CONTACT_RECEIVER,
       subject: `Portfolio Contact: ${subject}`,
-      html: `
-        <h2>New Portfolio Contact Message</h2>
-        <p><strong>Full Name:</strong> ${fullName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Company:</strong> ${company || 'N/A'}</p>
-        <p><strong>Budget:</strong> ${budget || 'N/A'}</p>
-        <p><strong>Subject:</strong> ${subject}</p>
-        <h3>Message</h3>
-        <p>${message}</p>
-      `
+      html: renderContactEmail({
+        fullName,
+        email,
+        company: company || 'N/A',
+        budget: budget || 'N/A',
+        subject,
+        message
+      })
     };
 
     console.log('📤 About to send email...');
@@ -58,4 +65,19 @@ async function sendContactEmail({
   }
 }
 
-module.exports = { sendContactEmail };
+async function sendCvRequestEmail({ fullName, email, company, reason }) {
+  return transporter.sendMail({
+    from: `"Portfolio CV Request" <${process.env.EMAIL_USER}>`,
+    to: process.env.CONTACT_RECEIVER,
+    replyTo: email,
+    subject: `CV request from ${fullName}`,
+    html: renderCvRequestEmail({
+      fullName,
+      email,
+      company: company || 'N/A',
+      reason: reason || 'No reason supplied'
+    })
+  });
+}
+
+module.exports = { sendContactEmail, sendCvRequestEmail };
