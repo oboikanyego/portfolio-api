@@ -7,10 +7,12 @@ const WINDOW_MS = 15 * 60 * 1000;
 const attempts = new Map();
 
 function cookieOptions() {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 8 * 60 * 60 * 1000,
     path: '/'
   };

@@ -10,14 +10,21 @@ const visitRoutes = require('./routes/visit.routes');
 const siteConfigRoutes = require('./routes/site-config.routes');
 
 const app = express();
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:4200')
+const defaultAllowedOrigins = [
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+  'https://oboikanyego-portfolio.netlify.app'
+];
+const configuredOrigins = (process.env.CLIENT_ORIGIN || '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/$/, ''))
   .filter(Boolean);
+const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredOrigins]);
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    const normalizedOrigin = origin?.replace(/\/$/, '');
+    if (!origin || allowedOrigins.has('*') || allowedOrigins.has(normalizedOrigin)) {
       return callback(null, true);
     }
     return callback(new Error('Origin is not allowed by CORS'));
