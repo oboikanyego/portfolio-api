@@ -4,9 +4,6 @@ const { getPagination, paginatedResult } = require('../utils/pagination');
 
 exports.createContact = async (req, res) => {
   try {
-    console.log('1. createContact hit');
-    console.log('2. req.body:', req.body);
-
     const {
       fullName,
       email,
@@ -25,24 +22,23 @@ exports.createContact = async (req, res) => {
       message
     });
 
-    console.log('3. before contact.save()');
     await contact.save();
-    console.log('4. after contact.save()');
 
-    console.log('5. before sendContactEmail()');
-    await sendContactEmail({
+    // Keep the saved enquiry successful even if notification delivery fails.
+    sendContactEmail({
       fullName,
       email,
       company,
       subject,
       budget,
       message
+    }).catch((error) => {
+      console.error('Contact notification failed:', error.message);
     });
-    console.log('6. after sendContactEmail()');
 
     return res.status(201).json({
       success: true,
-      message: 'Message sent successfully'
+      message: 'Message received successfully'
     });
   } catch (error) {
     console.error('createContact error:', error);
