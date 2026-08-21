@@ -1,7 +1,7 @@
-const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const Handlebars = require('handlebars');
+const { Resend } = require('resend');
 
 const compileTemplate = (fileName) => Handlebars.compile(
   fs.readFileSync(path.join(__dirname, '..', 'templates', fileName), 'utf8')
@@ -9,66 +9,63 @@ const compileTemplate = (fileName) => Handlebars.compile(
 const renderContactEmail = compileTemplate('contact-email.hbs');
 const renderCvRequestEmail = compileTemplate('cv-request-email.hbs');
 
-console.log('📧 Initializing mail transporter...');
-console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
-console.log('EMAIL_PORT:', process.env.EMAIL_PORT);
-console.log('EMAIL_USER:', process.env.EMAIL_USER);
-console.log('CONTACT_RECEIVER:', process.env.CONTACT_RECEIVER);
+let resendClient;
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+function getEmailConfig() {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.EMAIL_FROM?.trim();
+  const to = process.env.CONTACT_RECEIVER?.trim();
+
+  const missing = [
+    !apiKey && 'RESEND_API_KEY',
+    !from && 'EMAIL_FROM',
+    !to && 'CONTACT_RECEIVER'
+  ].filter(Boolean);
+
+  if (missing.length) {
+    throw new Error(`Email delivery is not configured. Missing: ${missing.join(', ')}`);
   }
-});
 
-async function sendContactEmail({
-  fullName,
-  email,
-  company,
-  subject,
-  budget,
-  message
-}) {
-  try {
-    console.log('📨 sendContactEmail called');
-    console.log('Sending email for:', email);
-
-    const mailOptions = {
-      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
-      to: process.env.CONTACT_RECEIVER,
-      subject: `Portfolio Contact: ${subject}`,
-      html: renderContactEmail({
-        fullName,
-        email,
-        company: company || 'N/A',
-        budget: budget || 'N/A',
-        subject,
-        message
-      })
-    };
-
-    console.log('📤 About to send email...');
-    const info = await transporter.sendMail(mailOptions);
-
-    console.log('✅ Email sent successfully');
-    console.log('Response:', info.response);
-
-    return info;
-  } catch (error) {
-    console.error('❌ Email sending failed');
-    console.error(error);
-    throw error;
-  }
+  return { apiKey, from, to };
 }
 
-async function sendCvRequestEmail({ fullName, email, company, reason }) {
-  return transporter.sendMail({
-    from: `"Portfolio CV Request" <${process.env.EMAIL_USER}>`,
-    to: process.env.CONTACT_RECEIVER,
+async function sendEmail({ subject, html, replyTo }) {
+  const config = getEmailConfig();
+  resendClient ||= new Resend(config.apiKey);
+
+  const { data, error } = await resendClient.emails.send({
+    from: config.from,
+    to: config.to,
+    replyTo,
+    subject: subject.replace(/[\r\n]+/g, ' ').trim(),
+    html
+  });
+
+  if (error) {
+    throw new Error(`Resend email failed: ${error.message || 'Unknown delivery error'}`);
+  }
+
+  console.log(`Resend email accepted: ${data.id}`);
+  return data;
+}
+
+function sendContactEmail({ fullName, email, company, subject, budget, message }) {
+  return sendEmail({
+    replyTo: email,
+    subject: `Portfolio Contact: ${subject}`,
+    html: renderContactEmail({
+      fullName,
+      email,
+      company: company || 'N/A',
+      budget: budget || 'N/A',
+      subject,
+      message
+    })
+  });
+}
+
+function sendCvRequestEmail({ fullName, email, company, reason }) {
+  return sendEmail({
     replyTo: email,
     subject: `CV request from ${fullName}`,
     html: renderCvRequestEmail({
