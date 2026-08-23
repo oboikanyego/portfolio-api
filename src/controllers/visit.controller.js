@@ -1,4 +1,5 @@
 const Visit = require('../models/visit.model');
+const InteractionEvent = require('../models/interaction-event.model');
 const { getPagination, paginatedResult } = require('../utils/pagination');
 
 exports.recordVisit = async (req, res) => {
@@ -28,6 +29,27 @@ exports.recordVisit = async (req, res) => {
   }
 };
 
+exports.recordInteraction = async (req, res) => {
+  try {
+    const visitorId = cleanString(req.body.visitorId, 100);
+    const sessionId = cleanString(req.body.sessionId, 100);
+    const name = cleanString(req.body.name, 80);
+    const label = cleanString(req.body.label, 160);
+    const path = cleanString(req.body.path, 300) || '/';
+    const allowedEvents = new Set(['project_case_study', 'project_live', 'project_source', 'contact_submit', 'cv_request', 'social_link']);
+
+    if (!visitorId || !sessionId || !allowedEvents.has(name)) {
+      return res.status(400).json({ success: false, message: 'A valid analytics event is required.' });
+    }
+
+    await InteractionEvent.create({ visitorId, sessionId, name, label, path });
+    return res.status(202).json({ success: true });
+  } catch (error) {
+    console.error('recordInteraction error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to record analytics event.' });
+  }
+};
+
 function cleanString(value, maxLength) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : '';
 }
@@ -40,7 +62,7 @@ exports.getVisitStats = async (req, res) => {
     start.setUTCHours(0, 0, 0, 0);
     start.setUTCDate(start.getUTCDate() - (days - 1));
 
-    const [daily, totalVisits, uniqueVisitors] = await Promise.all([
+    const [daily, totalVisits, uniqueVisitors, conversions] = await Promise.all([
       Visit.aggregate([
         { $match: { createdAt: { $gte: start } } },
         {
@@ -54,7 +76,13 @@ exports.getVisitStats = async (req, res) => {
         { $sort: { date: 1 } }
       ]),
       Visit.countDocuments(),
-      Visit.distinct('visitorId').then((ids) => ids.length)
+      Visit.distinct('visitorId').then((ids) => ids.length),
+      InteractionEvent.aggregate([
+        { $match: { createdAt: { $gte: start } } },
+        { $group: { _id: '$name', count: { $sum: 1 } } },
+        { $project: { _id: 0, name: '$_id', count: 1 } },
+        { $sort: { count: -1 } }
+      ])
     ]);
 
     const byDate = new Map(daily.map((item) => [item.date, item]));
@@ -71,7 +99,8 @@ exports.getVisitStats = async (req, res) => {
       totalVisits,
       uniqueVisitors,
       today: series.at(-1)?.visits || 0,
-      series
+      series,
+      conversions
     });
   } catch (error) {
     console.error('getVisitStats error:', error);
