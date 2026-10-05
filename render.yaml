@@ -1,0 +1,39 @@
+# Render Blueprint for the Developer Portfolio API.
+# Secrets are marked `sync: false`: Render prompts for them in the dashboard,
+# so no secret values ever live in this repository.
+services:
+  - type: web
+    name: portfolio-api
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    autoDeploy: true
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: CLIENT_ORIGIN
+        value: https://oboikanyego-portfolio.netlify.app
+      - key: DNS_SERVERS
+        value: 8.8.8.8,1.1.1.1
+      - key: SITE_CONFIG_CACHE_TTL_MS
+        value: "300000"
+      - key: MONGO_URI
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: CONTACT_RECEIVER
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: AUTH_TOKEN_SECRET
+        sync: false
