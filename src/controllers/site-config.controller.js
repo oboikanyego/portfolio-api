@@ -35,6 +35,32 @@ async function loadSiteConfig() {
         ).lean();
       }
 
+      // Promote the new showcase projects once for an existing legacy database record.
+      // Preserve edited contact, social and biography data.
+      if ((document.contentVersion || 0) < 3) {
+        const config = { ...document.config };
+        const previous = Array.isArray(config.projects) ? config.projects : [];
+        const featuredNames = new Set(['MzansiRent', 'KasiDrop']);
+        const fromDefaults = defaultConfig.projects;
+        const projects = previous.map((project) => {
+          const baseline = fromDefaults.find((candidate) => candidate.name === project.name);
+          return {
+            ...project,
+            ...(baseline ? { featured: featuredNames.has(project.name) } : {})
+          };
+        });
+        for (const project of fromDefaults) {
+          if (!projects.some((item) => item.name === project.name)) projects.push(project);
+        }
+        config.projects = projects;
+        config.home = { ...config.home, headline: defaultConfig.home.headline, description: defaultConfig.home.description, supportingText: defaultConfig.home.supportingText };
+        config.profile = { ...config.profile, role: defaultConfig.profile.role, tagline: defaultConfig.profile.tagline };
+        document = await SiteConfig.findOneAndUpdate(
+          { key: 'primary', contentVersion: { $ne: 3 } },
+          { $set: { config, contentVersion: 3 } },
+          { new: true }
+        ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
+      }
       return cacheDocument(document);
     })().finally(() => {
       pendingLoad = null;
