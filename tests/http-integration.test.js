@@ -67,3 +67,19 @@ test('malformed contact submissions are rejected without database access', async
     assert.equal((await response.json()).success, false);
   });
 });
+
+test('logout clears the cookie even when the session is missing or expired', async () => {
+  await withServer(async base => {
+    const response = await fetch(base + '/api/auth/logout', {
+      method: 'POST',
+      headers: { cookie: 'portfolio_admin_token=expired-token' }
+    });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).success, true);
+    const cookie = response.headers.get('set-cookie') || '';
+    assert.match(cookie, /portfolio_admin_token=;/);
+    assert.match(cookie, /Path=\//i);
+    const me = await fetch(base + '/api/auth/me');
+    assert.equal(me.status, 401);
+  });
+});
