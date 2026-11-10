@@ -25,3 +25,9 @@ Public images are intentionally not deleted from Cloudinary when removed in the 
 ### SEO notes
 
 Build-time static HTML snapshots still provide a crawler fallback but are **not updated immediately** by browser-side CMS edits. The browser renders new MongoDB content after fetching the API. Regenerate/trigger a Netlify deployment when newly edited project routes need fresh non-JavaScript HTML and sitemap entries.
+
+### Production quality smoke check
+
+`.github/workflows/production-api-audit.yml` performs a safe public endpoint audit, checks admin access controls, media restrictions, CORS and input validation. Its first merge triggers a **single** clearly tagged production contact and CV request. Those two records persist in the production admin inbox and send real notification emails to the configured recipient. Subsequent scheduled checks are deliberately **not** enabled, to avoid test spam. Manual runs are read-only by default; enable the `include_submissions` input only when a new end-to-end form test is necessary.
+
+A 201 response verifies persistence, not Resend email delivery. An authenticated admin must check the notification history/Resend delivery data separately. Browser-level admin login and Cloudinary uploads are tested with local fixtures rather than using production admin credentials.
