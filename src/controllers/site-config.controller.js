@@ -3,6 +3,7 @@ const defaultConfig = require('../config/default-site-config');
 const { summarizePublicConfig } = require('../utils/public-content-status');
 const { migratePortfolioCms } = require('../config/portfolio-cms-migration');
 const { validateSiteConfig } = require('../utils/validate-site-config');
+const { triggerSeoRebuild, validBuildHook } = require('../services/seo-rebuild.service');
 
 const memoryCacheTtlMs = Number(process.env.SITE_CONFIG_CACHE_TTL_MS) || 5 * 60 * 1000;
 let cachedDocument = null;
@@ -124,11 +125,31 @@ exports.updateSiteConfig = async (req, res) => {
       return res.status(409).json({ success: false, message: 'The portfolio changed since you opened it. Reload before saving.' });
     }
     cacheDocument(document);
+    // A CMS edit changes search index snapshots and sitemap; request a Netlify
+    // rebuild only after the MongoDB write has succeeded.
+    const seo = await triggerSeoRebuild();
+    // Never log or return the hook URL (it is a deployment credential).
+    await SiteConfig.updateOne({ key: 'primary' }, {
+      $set: { seoBuild: { ...seo, updatedAt: new Date() } }
+    }, { timestamps: false }).catch(error => console.error('SEO build status persistence failed:', error.message));
     res.set('Cache-Control', 'no-store');
-    return res.json({ success: true, config: document.config, updatedAt: document.updatedAt, contentVersion: document.contentVersion || 0 });
+    return res.json({ success: true, config: document.config, updatedAt: document.updatedAt,
+      seo, contentVersion: document.contentVersion || 0 });
   } catch (error) {
     console.error('updateSiteConfig error:', error);
     return res.status(500).json({ success: false, message: 'Unable to update site configuration.' });
+  }
+};
+
+exports.getSeoBuildStatus = async (_req, res) => {
+  try {
+    const document = await SiteConfig.findOne({ key:'primary' }).select({ seoBuild: 1 }).lean();
+    res.set('Cache-Control', 'no-store');
+    return res.json({ success: true, configured: validBuildHook(process.env.NETLIFY_BUILD_HOOK_URL),
+      last: document?.seoBuild || null });
+  } catch (error) {
+    console.error('SEO build status failed:', error.message);
+    return res.status(500).json({ success: false, message: 'Unable to load SEO build status.' });
   }
 };
 
