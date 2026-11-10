@@ -1,13 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const Handlebars = require('handlebars');
 const { Resend } = require('resend');
 
-const compileTemplate = (fileName) => Handlebars.compile(
-  fs.readFileSync(path.join(__dirname, '..', 'templates', fileName), 'utf8')
-);
-const renderContactEmail = compileTemplate('contact-email.hbs');
-const renderCvRequestEmail = compileTemplate('cv-request-email.hbs');
+const { renderStoredTemplate } = require('./email-template.service');
 
 let resendClient;
 
@@ -49,32 +42,17 @@ async function sendEmail({ subject, html, replyTo }) {
   return data;
 }
 
-function sendContactEmail({ fullName, email, company, subject, budget, message }) {
-  return sendEmail({
-    replyTo: email,
-    subject: `Portfolio Contact: ${subject}`,
-    html: renderContactEmail({
-      fullName,
-      email,
-      company: company || 'N/A',
-      budget: budget || 'N/A',
-      subject,
-      message
-    })
+async function sendContactEmail({ fullName, email, company, subject, budget, message, source }) {
+  const rendered = await renderStoredTemplate('contact', {
+    fullName, email, company: company || 'N/A', subject, budget: budget || 'N/A', message, source
   });
+  return sendEmail({ replyTo: email, ...rendered });
 }
-
-function sendCvRequestEmail({ fullName, email, company, reason }) {
-  return sendEmail({
-    replyTo: email,
-    subject: `CV request from ${fullName}`,
-    html: renderCvRequestEmail({
-      fullName,
-      email,
-      company: company || 'N/A',
-      reason: reason || 'No reason supplied'
-    })
+async function sendCvRequestEmail({ fullName, email, company, reason, source }) {
+  const rendered = await renderStoredTemplate('cv-request', {
+    fullName, email, company: company || 'N/A', reason: reason || 'No reason supplied', source
   });
+  return sendEmail({ replyTo: email, ...rendered });
 }
 
 module.exports = { sendContactEmail, sendCvRequestEmail };

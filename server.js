@@ -2,6 +2,7 @@ require('dotenv').config();
 const dns = require('dns');
 const app = require('./src/app');
 const { connectDb } = require('./src/config/db');
+const { ensureEmailTemplates } = require('./src/services/email-template.service');
 const { warmPublicSiteConfig } = require('./src/controllers/site-config.controller');
 const { validBuildHook } = require('./src/services/seo-rebuild.service');
 
@@ -14,7 +15,9 @@ if (process.env.DNS_SERVERS) {
   }
 }
 
-connectDb().then(() => {
+connectDb().then(async () => {
+  const count = await ensureEmailTemplates();
+  console.info('[portfolio] email_templates_ready', count);
   app.listen(PORT, () => {
     console.log(`Portfolio API running on port ${PORT}`);
     console.info('[portfolio] cloudinary_upload_ready', Boolean(
