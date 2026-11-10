@@ -6,7 +6,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "email:test": "node scripts/test-email.js",
-    "admin:set-password": "node scripts/set-admin-password.js"
+    "admin:set-password": "node scripts/set-admin-password.js",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

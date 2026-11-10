@@ -4,9 +4,9 @@ module.exports = {
     firstName: 'Oboikanyego',
     displayName: 'BK Radipabe',
     fullName: 'Oboikanyego Radipabe',
-    role: 'Intermediate Full-Stack Software Engineer',
+    role: 'Full-Stack Software Engineer',
     shortRole: 'Full-Stack Software Engineer',
-    tagline: 'Intermediate Full-Stack Software Engineer | Angular | SQL | REST APIs',
+    tagline: 'Full-Stack Product Engineer | Angular | TypeScript | Node.js | SQL',
     location: 'Johannesburg, South Africa',
     email: 'kanyiradipabe@gmail.com',
     profileImage: 'assets/images/BK.jpeg',
@@ -22,9 +22,9 @@ module.exports = {
   },
   home: {
     greeting: 'Hey, I’m BK',
-    headline: 'Full-Stack Engineer building reliable products from interface to API.',
-    description: 'I turn complex business workflows into scalable, user-focused applications with Angular, Node.js, TypeScript, SQL, and MongoDB.',
-    supportingText: 'With 4+ years of enterprise experience, I contribute beyond development—from solution design and release support to code reviews and mentoring.'
+    headline: 'I engineer useful products, from the first interaction to production.',
+    description: 'Full-stack product engineering with Angular, TypeScript, Node.js and SQL. I design workflows, APIs, data models and interfaces that work together.',
+    supportingText: '4+ years of enterprise delivery. I own features end to end, investigate production issues, review code and mentor engineers.'
   },
   about: {
     title: 'A curious mind that grew into an engineering career.',
@@ -49,9 +49,12 @@ module.exports = {
     { progressionDate: 'Jan ’25', period: 'Jan 2025 — Present', role: 'Intermediate Software Engineer', company: 'Neutrinos', summary: 'Today I own features end to end, contribute to enterprise architecture and delivery, solve production issues, and help junior developers grow.', highlights: ['End-to-end ownership', 'Technical leadership', 'Mentoring'], learned: ['How to balance technical quality with business and delivery needs', 'Deeper production troubleshooting across UI, APIs, logs and data', 'How guidance and thoughtful reviews help an engineering team grow'], responsibilities: ['Own analysis, implementation, testing and release validation', 'Build enterprise workflows and investigate production defects', 'Mentor junior developers and collaborate with business stakeholders'] }
   ],
   projects: [
-    { name: 'Freelance Services Platform', stack: 'Angular · Node.js · Express · MongoDB', description: 'A full-stack platform where clients can post projects and freelancers can offer services, featuring authentication, messaging, and scalable REST APIs.', liveUrl: 'https://freelance-services-platform.netlify.app/', githubUrl: 'https://github.com/oboikanyego/Freelance-Services-Platform_ui', image: 'assets/images/projects/freelancing-app.png', private: true, featured: true },
-    { name: 'DentaCare', stack: 'Angular · Node.js · MongoDB', description: 'A clinic management platform for managing appointments, patient records, and administrative workflows through a clean and structured interface.', liveUrl: 'https://dentacare-ec0038.netlify.app/', githubUrl: 'https://github.com/oboikanyego/dentacare-system', image: 'assets/images/projects/DentaCare.png', private: true, featured: true },
+    { name: 'Freelance Services Platform', stack: 'Angular · Node.js · Express · MongoDB', description: 'A full-stack platform where clients can post projects and freelancers can offer services, featuring authentication, messaging, and scalable REST APIs.', liveUrl: 'https://freelance-services-platform.netlify.app/', githubUrl: 'https://github.com/oboikanyego/Freelance-Services-Platform_ui', image: 'assets/images/projects/freelancing-app.png', private: true, featured: false },
+    { name: 'DentaCare', stack: 'Angular · Node.js · MongoDB', description: 'A clinic management platform for managing appointments, patient records, and administrative workflows through a clean and structured interface.', liveUrl: 'https://dentacare-ec0038.netlify.app/', githubUrl: 'https://github.com/oboikanyego/dentacare-system', image: 'assets/images/projects/DentaCare.png', private: true, featured: false },
     { name: 'MzansiRent', stack: 'Angular · Node.js · Express · MongoDB · Paystack · Cloudinary · Socket.IO', description: 'A full-stack South African rental property operations platform for tenants, landlords, property managers, and administrators.', liveUrl: 'https://graceful-meerkat-4a499a.netlify.app/', githubUrl: 'https://github.com/oboikanyego/mzansi-rent', image: 'assets/images/projects/mzanzi-rent.png', private: true, featured: true },
+    { name: 'KasiDrop', stack: 'Ionic · Angular · Node.js · Express · TypeScript · MongoDB · PayFast', description: 'South African e-commerce product combining customer discovery and checkout with an admin product catalogue, feedback workflows and AI-assisted shopping features.', liveUrl: '', githubUrl: 'https://github.com/oboikanyego/kasi-drop-ui', image: '', private: false, featured: true },
+    { name: 'Mzansi Rent Lite', stack: 'Angular · Node.js · Express · MongoDB · Cloudinary', description: 'Focused rental platform with landlord and tenant onboarding, listing management, applications, operational review queues and hosted services.', liveUrl: 'https://mzansi-rent.netlify.app/', githubUrl: 'https://github.com/oboikanyego/mzansi-rent-lite-ui', image: '', private: false, featured: false },
+    { name: 'Real-Time Portfolio Risk Dashboard', stack: 'Angular · Node.js · Socket.IO · SQL · Docker', description: 'Trading-oriented risk dashboard exploring live market data, portfolio exposure, real-time calculations and analysis workflows. This is a work-in-progress showcase, not investment advice.', liveUrl: '', githubUrl: '', image: '', private: false, featured: false },
     { name: 'Real-Time Chat System', stack: 'Angular · Node.js · MongoDB · Firebase authentication · Socket.IO', description: 'A real-time messaging feature that allows users to communicate instantly through a responsive chat interface.', liveUrl: '', githubUrl: '', image: '', private: false, featured: false },
     { name: 'Secure Authentication System', stack: 'Node.js · Express · MongoDB · JWT', description: 'A secure authentication system with registration, login, email verification, short-lived password-reset tokens, and protected routes.', liveUrl: '', githubUrl: '', image: 'assets/images/projects/authentication.jpg', private: false, featured: false }
   ],
