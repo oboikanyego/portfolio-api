@@ -4,11 +4,16 @@ function summarizePublicConfig(document) {
   const byName = name => projects.find(project => project.name === name);
   const captureValid = (name, liveUrl, image) => {
     const p = byName(name);
-    return Boolean(p && p.liveUrl === liveUrl && p.image === image);
+    return Boolean(p && p.liveUrl === liveUrl && (
+      p.image === image ||
+      (typeof p.image === 'string' && /^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\//.test(p.image))
+    ));
   };
   return {
     contentVersion: document?.contentVersion ?? null,
     projectCount: projects.length,
+    cloudinaryImages: projects.filter(p => /^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\//.test(p.image || '')).length,
+    profileCloudinary: /^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\//.test(document?.config?.profile?.profileImage || ''),
     hasVerifiedKasiDrop: captureValid(
       'KasiDrop', 'https://kasi-drop.netlify.app/', 'assets/images/projects/kasidrop-live.webp'
     ),
