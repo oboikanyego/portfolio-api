@@ -23,9 +23,8 @@ test('health endpoint responds without database access and has security headers'
 
 test('administrative endpoints reject unauthenticated access', async () => {
   await withServer(async base => {
-    for (const path of ['/api/auth/me', '/api/visits/stats', '/api/contacts', '/api/cv-requests', '/api/site-config']) {
+    for (const path of ['/api/auth/me', '/api/visits/stats', '/api/contact', '/api/cv-requests']) {
       // POST/GET uses the exact configured routes, not a public database operation.
-      if (path === '/api/contacts') continue;
       const res = await fetch(base + path + (path === '/api/visits/stats' ? '?days=7' : ''));
       assert.equal(res.status, 401, path);
     }
