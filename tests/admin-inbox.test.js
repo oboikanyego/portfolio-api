@@ -10,7 +10,7 @@ test('inbox filters normalise query input and cap resource use', () => {
   const p = buildInboxPipeline(parseInboxQuery({ search: '.*(admin)' }));
   assert.ok(p.some(x => x.$unionWith));
   const match = p.find(x => x.$match);
-  assert.equal(match.$or[0].fullName.$regex, '\\.\\*\\(admin\\)');
+  assert.equal(match.$match.$or[0].fullName.$regex, '\\.\\*\\(admin\\)');
   assert.ok(p.at(-1).$facet.data.some(x=>x.$limit === 15));
 });
 
