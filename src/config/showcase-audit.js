@@ -4,6 +4,50 @@
  * Preserve all admin-authored nonempty content and unpublished statuses.
  */
 const known = {
+  'kasidrop': {
+    study: {
+      architecture: [
+        { label: 'Storefront', value: 'Ionic and Angular' },
+        { label: 'API', value: 'Node.js, Express and TypeScript' },
+        { label: 'Data', value: 'MongoDB' },
+        { label: 'Payments', value: 'PayFast integration' },
+        { label: 'AI suggestions', value: 'Provider fallback workflow' }
+      ],
+      challenges: ['Maintaining consistent payment state when checkout notifications arrive asynchronously.', 'Keeping AI shopping features usable when providers are slow or unavailable.']
+    }
+  },
+  'mzansi-rent-lite': {
+    study: {
+      architecture: [
+        { label: 'Web app', value: 'Angular' },
+        { label: 'API', value: 'Node.js and Express' },
+        { label: 'Records', value: 'MongoDB' },
+        { label: 'Media', value: 'Cloudinary' }
+      ],
+      challenges: ['Coordinating application approvals across tenant, landlord and operations roles.', 'Managing free-tier API wake-up states without confusing visitors.']
+    }
+  },
+  'genesis-kiddies-corner': {
+    study: {
+      architecture: [
+        { label: 'Customer interface', value: 'Ionic and Angular' },
+        { label: 'API', value: 'Node.js and Express' },
+        { label: 'Records', value: 'MongoDB' }
+      ],
+      challenges: ['Keeping booking enquiries simple across phone and desktop layouts.', 'Validating service and equipment availability before confirming requests.']
+    }
+  },
+  'royal-treats': {
+    study: {
+      architecture: [
+        { label: 'Storefront', value: 'Angular and TypeScript' },
+        { label: 'API', value: 'Node.js and Express' },
+        { label: 'Records', value: 'MongoDB' },
+        { label: 'Operations', value: 'Admin and courier workflows' }
+      ],
+      challenges: ['Avoiding duplicate orders when checkout requests are retried.', 'Applying product stock and delivery eligibility rules consistently.']
+    }
+  },
   'freelance-services-platform': {
     image: 'https://res.cloudinary.com/dv2hhefed/image/upload/v1794286667/bk-portfolio/projects/freelance-desktop.webp',
     study: {
