@@ -13,6 +13,12 @@ function summarizePublicConfig(document) {
     contentVersion: document?.contentVersion ?? null,
     projectCount: projects.length,
     cloudinaryImages: projects.filter(p => /^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\//.test(p.image || '')).length,
+    mobileScreenshots: projects.filter(p => /^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\//.test(p.mobileImage || '')).length,
+    missingCoverImages: projects.filter(p => !p.image).length,
+    missingPublicDemos: projects.filter(p => !p.liveUrl).length,
+    missingCaseStudyDetails: projects.filter(p => !p.caseStudy?.summary ||
+      !p.caseStudy?.challenge || !p.caseStudy?.outcome || !p.caseStudy?.approach?.length ||
+      !p.caseStudy?.architecture?.length || !p.caseStudy?.challenges?.length).length,
     profileCloudinary: /^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\//.test(document?.config?.profile?.profileImage || ''),
     hasVerifiedKasiDrop: captureValid(
       'KasiDrop', 'https://kasi-drop.netlify.app/', 'assets/images/projects/kasidrop-live.webp'

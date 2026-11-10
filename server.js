@@ -3,6 +3,7 @@ const dns = require('dns');
 const app = require('./src/app');
 const { connectDb } = require('./src/config/db');
 const { warmPublicSiteConfig } = require('./src/controllers/site-config.controller');
+const { validBuildHook } = require('./src/services/seo-rebuild.service');
 
 const PORT = process.env.PORT || 3000;
 
@@ -19,6 +20,7 @@ connectDb().then(() => {
     console.info('[portfolio] cloudinary_upload_ready', Boolean(
       process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET
     ));
+    console.info('[portfolio] seo_auto_rebuild_ready', validBuildHook(process.env.NETLIFY_BUILD_HOOK_URL));
     // Non-blocking startup verification: the site still serves health checks while
     // public content loads and any version migration is applied.
     warmPublicSiteConfig().catch((error) => {
