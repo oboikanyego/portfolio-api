@@ -3,6 +3,7 @@ const defaultConfig = require('../config/default-site-config');
 const { summarizePublicConfig } = require('../utils/public-content-status');
 const { migratePortfolioCms } = require('../config/portfolio-cms-migration');
 const { validateSiteConfig } = require('../utils/validate-site-config');
+const { enhanceShowcase } = require('../config/showcase-audit');
 const { triggerSeoRebuild, validBuildHook } = require('../services/seo-rebuild.service');
 
 const memoryCacheTtlMs = Number(process.env.SITE_CONFIG_CACHE_TTL_MS) || 5 * 60 * 1000;
@@ -53,6 +54,14 @@ async function loadSiteConfig() {
         document = await SiteConfig.findOneAndUpdate(
           { key: 'primary', contentVersion: { $ne: 5 } },
           { $set: { config, contentVersion: 5 } },
+          { new: true, runValidators: true }
+        ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
+      }
+      if ((document.contentVersion || 0) < 6) {
+        const config = enhanceShowcase(document.config || defaultConfig);
+        document = await SiteConfig.findOneAndUpdate(
+          { key: 'primary', contentVersion: { $lt: 6 } },
+          { $set: { config, contentVersion: 6 } },
           { new: true, runValidators: true }
         ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
       }
