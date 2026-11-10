@@ -7,7 +7,7 @@ const interactionEventSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      enum: ['project_case_study', 'project_live', 'project_source', 'contact_submit', 'cv_request', 'social_link']
+      enum: ['project_view', 'hire_me_click', 'discuss_project_click', 'request_cv_click', 'project_case_study', 'project_live', 'project_source', 'contact_submit', 'cv_request', 'social_link']
     },
     label: { type: String, trim: true, default: '', maxlength: 160 },
     path: { type: String, trim: true, default: '/', maxlength: 300 }

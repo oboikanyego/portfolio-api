@@ -1,4 +1,5 @@
 const CvRequest = require('../models/cv-request.model');
+const { cleanLeadSource } = require('../utils/lead-source');
 const { sendCvRequestEmail } = require('../services/mail.service');
 const { getPagination, paginatedResult } = require('../utils/pagination');
 
@@ -10,6 +11,7 @@ exports.createCvRequest = async (req, res) => {
     const email = cleanString(req.body.email, 180).toLowerCase();
     const company = cleanString(req.body.company, 160);
     const reason = cleanString(req.body.reason, 1000);
+    const source = cleanLeadSource(req.body.source, 'request_cv');
 
     if (!fullName || !emailPattern.test(email)) {
       return res.status(400).json({
@@ -18,7 +20,7 @@ exports.createCvRequest = async (req, res) => {
       });
     }
 
-    const request = await CvRequest.create({ fullName, email, company, reason });
+    const request = await CvRequest.create({ fullName, email, company, reason, source });
 
     sendCvRequestEmail({ fullName, email, company, reason }).then((result) =>
       CvRequest.updateOne({ _id: request._id }, {

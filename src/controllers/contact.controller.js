@@ -1,4 +1,5 @@
 const ContactMessage = require('../models/contact-message.model');
+const { cleanLeadSource } = require('../utils/lead-source');
 const { sendContactEmail } = require('../services/mail.service');
 const { getPagination, paginatedResult } = require('../utils/pagination');
 
@@ -10,7 +11,7 @@ exports.createContact = async (req, res) => {
       company,
       subject,
       budget,
-      message
+      message, source
     } = req.body;
 
     const clean = (value, max) => typeof value === 'string' ? value.trim().slice(0, max) : '';
@@ -27,7 +28,8 @@ exports.createContact = async (req, res) => {
       company: clean(company, 160),
       subject: cleanSubject,
       budget: clean(budget, 100),
-      message: cleanMessage
+      message: cleanMessage,
+      source: cleanLeadSource(source, 'contact_page')
     });
 
     await contact.save();

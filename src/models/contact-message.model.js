@@ -13,6 +13,7 @@ const contactMessageSchema = new mongoose.Schema(
       error: { type: String, default: '' },
       at: { type: Date, default: Date.now }
     }],
+    source: { type: String, trim: true, maxlength: 64, default: 'contact_page', index: true },
     fullName: {
       type: String,
       required: true,
