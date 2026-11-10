@@ -10,5 +10,11 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many image uploads. Please try later.' }
 });
+router.get('/status', requireAdmin, (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  return res.json({ success: true, configured: Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET
+  ) });
+});
 router.post('/images', requireAdmin, uploadLimiter, express.json({ limit: '9mb' }), uploadImage);
 module.exports = router;

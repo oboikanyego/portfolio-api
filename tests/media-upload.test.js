@@ -45,3 +45,23 @@ test('server-side signatures never require secret in the browser', async () => {
   assert.match(cloudinarySignature('bk-portfolio/uploads','123','private-test-secret'),/^[0-9a-f]{40}$/);
   await assert.rejects(sendToCloudinary({mime:'image/png',buffer:Buffer.from('data')},'image.png',{}),e=>e.status===503);
 });
+
+test('Cloudinary readiness endpoint is authenticated and never reveals credentials', async () => {
+  const before = process.env.AUTH_TOKEN_SECRET;
+  process.env.AUTH_TOKEN_SECRET = 'cms-readiness-test-secret';
+  try {
+    await serverRun(async base => {
+      const denied = await fetch(base + '/api/media/status');
+      assert.equal(denied.status, 401);
+      const token = jwt.sign({sub:'tester@example.com',role:'admin'}, process.env.AUTH_TOKEN_SECRET);
+      const allowed = await fetch(base + '/api/media/status', {headers:{cookie:'portfolio_admin_token='+token}});
+      assert.equal(allowed.status,200);
+      const body = await allowed.json();
+      assert.equal(typeof body.configured,'boolean');
+      assert.deepEqual(Object.keys(body).sort(),['configured','success']);
+    });
+  } finally {
+    if (before === undefined) delete process.env.AUTH_TOKEN_SECRET;
+    else process.env.AUTH_TOKEN_SECRET = before;
+  }
+});

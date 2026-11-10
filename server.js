@@ -16,6 +16,9 @@ if (process.env.DNS_SERVERS) {
 connectDb().then(() => {
   app.listen(PORT, () => {
     console.log(`Portfolio API running on port ${PORT}`);
+    console.info('[portfolio] cloudinary_upload_ready', Boolean(
+      process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET
+    ));
     // Non-blocking startup verification: the site still serves health checks while
     // public content loads and any version migration is applied.
     warmPublicSiteConfig().catch((error) => {
