@@ -1,0 +1,43 @@
+name: One-time API dependency repair
+on:
+  push:
+    branches: [feat/portfolio-v3-final-hardening]
+    paths:
+      - '.github/workflows/security-fix.yml'
+permissions:
+  contents: write
+jobs:
+  safe-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/portfolio-v3-final-hardening
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Apply semver-compatible npm advisory patches
+        run: npm audit fix || true
+      - name: Report remaining security advisories
+        run: |
+          npm audit --json > audit.json || true
+          node - <<'JS'
+          const report = require('./audit.json');
+          console.log('All severities:', report.metadata?.vulnerabilities);
+          const items = Object.entries(report.vulnerabilities || {});
+          for (const [name, v] of items.filter(([,v]) => ['critical','high'].includes(v.severity))) {
+            console.log(name, 'severity='+v.severity, 'direct='+v.isDirect, 'fix='+JSON.stringify(v.fixAvailable));
+          }
+          JS
+      - name: Commit dependency lock updates to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(security): apply npm-compatible dependency patches"
+            git push origin HEAD:feat/portfolio-v3-final-hardening
+          fi
