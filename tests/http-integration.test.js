@@ -83,3 +83,26 @@ test('logout clears the cookie even when the session is missing or expired', asy
     assert.equal(me.status, 401);
   });
 });
+
+test('admin logout cookie is SameSite=Lax to reduce cross-site request risk', async () => {
+  await withServer(async base => {
+    const response = await fetch(base + '/api/auth/logout', { method:'POST' });
+    assert.equal(response.status,200);
+    assert.match(response.headers.get('set-cookie')||'',/SameSite=Lax/i);
+  });
+});
+
+test('media uploads, inbox and CMS configuration reject guests', async()=>{
+  await withServer(async base=>{
+    const paths=['/api/admin/inbox','/api/media/status','/api/site-config/admin','/api/site-config/seo-status'];
+    for(const path of paths){
+      const result=await fetch(base+path);
+      assert.equal(result.status,401,path);
+    }
+    const upload=await fetch(base+'/api/media/images',{
+      method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({filename:'test.png',data:'invalid'})
+    });
+    assert.equal(upload.status,401);
+  });
+});
