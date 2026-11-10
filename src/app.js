@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth.routes');
 const cvRequestRoutes = require('./routes/cv-request.routes');
 const visitRoutes = require('./routes/visit.routes');
 const siteConfigRoutes = require('./routes/site-config.routes');
+const mediaRoutes = require('./routes/media.routes');
 const { globalApiLimiter } = require('./middleware/rate-limit.middleware');
 
 const app = express();
@@ -44,8 +45,10 @@ app.use('/api', (req, res, next) => {
   }
   return globalApiLimiter(req, res, next);
 });
-app.use(express.json());
 app.use(cookieParser());
+// Authenticated media upload accepts a bounded base64 image before the normal API parser.
+app.use('/api/media', mediaRoutes);
+app.use(express.json({ limit: '2mb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Developer portfolio API is healthy' });

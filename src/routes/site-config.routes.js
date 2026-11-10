@@ -3,6 +3,7 @@ const controller = require('../controllers/site-config.controller');
 const { requireAdmin } = require('../middleware/admin-auth.middleware');
 
 router.get('/', controller.getSiteConfig);
+router.get('/admin', requireAdmin, controller.getAdminSiteConfig);
 router.put('/', requireAdmin, controller.updateSiteConfig);
 
 module.exports = router;

@@ -27,6 +27,12 @@ services:
         sync: false
       - key: MONGODB_DB_NAME
         sync: false # Must match the existing Atlas database before switching
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dv2hhefed
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM
