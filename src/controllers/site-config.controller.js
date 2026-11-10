@@ -1,10 +1,12 @@
 const SiteConfig = require('../models/site-config.model');
 const defaultConfig = require('../config/default-site-config');
+const { summarizePublicConfig } = require('../utils/public-content-status');
 
 const memoryCacheTtlMs = Number(process.env.SITE_CONFIG_CACHE_TTL_MS) || 5 * 60 * 1000;
 let cachedDocument = null;
 let cacheExpiresAt = 0;
 let pendingLoad = null;
+let contentStatusLogged = false;
 
 function cacheDocument(document) {
   cachedDocument = document;
@@ -68,6 +70,12 @@ async function loadSiteConfig() {
           { new: true }
         ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
       }
+      // Log public content metadata once per process, without contact details or secrets.
+      // This makes the MongoDB migration verifiable through Render application logs.
+      if (!contentStatusLogged) {
+        console.info('[portfolio] public_config_state', JSON.stringify(summarizePublicConfig(document)));
+        contentStatusLogged = true;
+      }
       return cacheDocument(document);
     })().finally(() => {
       pendingLoad = null;
@@ -86,7 +94,8 @@ exports.getSiteConfig = async (_req, res) => {
     res.set('Netlify-CDN-Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
 
     const document = await loadSiteConfig();
-    return res.json({ success: true, config: document.config, updatedAt: document.updatedAt });
+    res.set('X-Portfolio-Content-Version', String(document.contentVersion || 0));
+    return res.json({ success: true, config: document.config, contentVersion: document.contentVersion || 0, updatedAt: document.updatedAt });
   } catch (error) {
     console.error('getSiteConfig error:', error);
     return res.status(500).json({ success: false, message: 'Unable to load site configuration.' });
