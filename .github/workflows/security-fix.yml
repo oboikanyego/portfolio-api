@@ -4,6 +4,7 @@ on:
     branches: [feat/portfolio-v3-final-hardening]
     paths:
       - '.github/workflows/security-fix.yml'
+      - 'package.json'
 permissions:
   contents: write
 jobs:
@@ -18,7 +19,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      - run: rm package-lock.json && npm install --no-audit
       - name: Apply semver-compatible npm advisory patches
         run: npm audit fix || true
       - name: Report remaining security advisories
