@@ -9,6 +9,7 @@ const cvRequestRoutes = require('./routes/cv-request.routes');
 const visitRoutes = require('./routes/visit.routes');
 const siteConfigRoutes = require('./routes/site-config.routes');
 const mediaRoutes = require('./routes/media.routes');
+const adminInboxRoutes = require('./routes/admin-inbox.routes');
 const { globalApiLimiter } = require('./middleware/rate-limit.middleware');
 
 const app = express();
@@ -54,6 +55,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', message: 'Developer portfolio API is healthy' });
 });
 
+app.use('/api/admin/inbox', adminInboxRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cv-requests', cvRequestRoutes);
