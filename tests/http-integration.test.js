@@ -56,3 +56,14 @@ test('CORS sends allowed origin only for approved portfolio hosts', async () => 
     assert.notEqual(denied.headers.get('access-control-allow-origin'), 'https://untrusted.example');
   });
 });
+
+test('malformed contact submissions are rejected without database access', async () => {
+  await withServer(async base => {
+    const response = await fetch(base + '/api/contact', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ fullName: 'Example', email: 'bad', subject: 'hello', message: 'Hello there' })
+    });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).success, false);
+  });
+});
