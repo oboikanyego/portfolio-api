@@ -124,3 +124,6 @@ exports.updateSiteConfig = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Unable to update site configuration.' });
   }
 };
+
+// Also used by the non-blocking server startup warm-up.
+exports.warmPublicSiteConfig = loadSiteConfig;
