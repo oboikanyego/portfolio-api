@@ -41,7 +41,8 @@ exports.createContact = async (req, res) => {
       company: clean(company, 160),
       subject: cleanSubject,
       budget: clean(budget, 100),
-      message: cleanMessage
+      message: cleanMessage,
+      source: cleanLeadSource(source, 'contact_page')
     }).then((result) => ContactMessage.updateOne(
       { _id: contact._id },
       { $push: { notificationHistory: { status: 'accepted', providerId: result?.id || '' } } }

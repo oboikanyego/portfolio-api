@@ -22,7 +22,7 @@ exports.createCvRequest = async (req, res) => {
 
     const request = await CvRequest.create({ fullName, email, company, reason, source });
 
-    sendCvRequestEmail({ fullName, email, company, reason }).then((result) =>
+    sendCvRequestEmail({ fullName, email, company, reason, source }).then((result) =>
       CvRequest.updateOne({ _id: request._id }, {
         $push: { notificationHistory: { status: 'accepted', providerId: result?.id || '' } }
       })
