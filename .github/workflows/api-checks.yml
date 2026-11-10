@@ -14,6 +14,8 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
+      - name: Audit API dependency tree
+        run: npm audit --audit-level=moderate
       - run: npm test
       - run: node --check src/controllers/site-config.controller.js
       - run: node --check src/app.js

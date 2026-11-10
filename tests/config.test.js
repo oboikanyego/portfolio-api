@@ -10,7 +10,8 @@ test('showcase includes new projects without inventing live deployment links', (
   const names = new Set(config.projects.map(project => project.name));
   ['MzansiRent', 'KasiDrop', 'Mzansi Rent Lite', 'Real-Time Portfolio Risk Dashboard'].forEach(name => assert.ok(names.has(name)));
   const kasi = config.projects.find(project => project.name === 'KasiDrop');
-  assert.equal(kasi.liveUrl, '');
+  assert.equal(kasi.liveUrl, 'https://kasi-drop.netlify.app/');
+  assert.equal(kasi.image, 'assets/images/projects/kasidrop-live.webp');
 });
 test('project entries are uniquely named and carry case study metadata', () => {
   const names = config.projects.map(p => p.name);

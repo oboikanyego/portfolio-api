@@ -22,7 +22,7 @@ async function loadSiteConfig() {
   if (!pendingLoad) {
     pendingLoad = (async () => {
       let document = await SiteConfig.findOne({ key: 'primary' })
-        .select({ config: 1, updatedAt: 1 })
+        .select({ config: 1, contentVersion: 1, updatedAt: 1 })
         .lean();
 
       // Creating the default is exceptional. The normal public GET path stays
@@ -37,27 +37,34 @@ async function loadSiteConfig() {
 
       // Promote the new showcase projects once for an existing legacy database record.
       // Preserve edited contact, social and biography data.
-      if ((document.contentVersion || 0) < 3) {
+      if ((document.contentVersion || 0) < 4) {
+        const previousVersion = document.contentVersion || 0;
         const config = { ...document.config };
         const previous = Array.isArray(config.projects) ? config.projects : [];
-        const featuredNames = new Set(['MzansiRent', 'KasiDrop']);
+        const featuredNames = new Set(['MzansiRent', 'KasiDrop', 'Mzansi Rent Lite', 'Genesis Kiddies Corner']);
         const fromDefaults = defaultConfig.projects;
         const projects = previous.map((project) => {
           const baseline = fromDefaults.find((candidate) => candidate.name === project.name);
           return {
             ...project,
-            ...(baseline ? { featured: featuredNames.has(project.name) } : {})
+            ...(baseline ? {
+              featured: featuredNames.has(project.name),
+              ...(baseline.liveUrl ? { liveUrl: baseline.liveUrl } : {}),
+              ...(baseline.image ? { image: baseline.image } : {})
+            } : {})
           };
         });
         for (const project of fromDefaults) {
           if (!projects.some((item) => item.name === project.name)) projects.push(project);
         }
         config.projects = projects;
-        config.home = { ...config.home, headline: defaultConfig.home.headline, description: defaultConfig.home.description, supportingText: defaultConfig.home.supportingText };
-        config.profile = { ...config.profile, role: defaultConfig.profile.role, tagline: defaultConfig.profile.tagline };
+        if (previousVersion < 3) {
+          config.home = { ...config.home, headline: defaultConfig.home.headline, description: defaultConfig.home.description, supportingText: defaultConfig.home.supportingText };
+          config.profile = { ...config.profile, role: defaultConfig.profile.role, tagline: defaultConfig.profile.tagline };
+        }
         document = await SiteConfig.findOneAndUpdate(
-          { key: 'primary', contentVersion: { $ne: 3 } },
-          { $set: { config, contentVersion: 3 } },
+          { key: 'primary', contentVersion: { $ne: 4 } },
+          { $set: { config, contentVersion: 4 } },
           { new: true }
         ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
       }
