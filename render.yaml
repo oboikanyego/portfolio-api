@@ -33,6 +33,8 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: NETLIFY_BUILD_HOOK_URL
+        sync: false # Secret URL created in Netlify → project configuration → build hooks
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM

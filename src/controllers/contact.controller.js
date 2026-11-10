@@ -40,8 +40,15 @@ exports.createContact = async (req, res) => {
       subject: cleanSubject,
       budget: clean(budget, 100),
       message: cleanMessage
-    }).catch((error) => {
+    }).then((result) => ContactMessage.updateOne(
+      { _id: contact._id },
+      { $push: { notificationHistory: { status: 'accepted', providerId: result?.id || '' } } }
+    )).catch((error) => {
       console.error('Contact notification failed:', error.message);
+      return ContactMessage.updateOne(
+        { _id: contact._id },
+        { $push: { notificationHistory: { status: 'failed', error: String(error.message).slice(0, 180) } } }
+      ).catch(logError => console.error('Notification history update failed:', logError.message));
     });
 
     return res.status(201).json({

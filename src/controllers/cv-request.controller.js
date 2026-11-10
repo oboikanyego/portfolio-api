@@ -20,8 +20,15 @@ exports.createCvRequest = async (req, res) => {
 
     const request = await CvRequest.create({ fullName, email, company, reason });
 
-    sendCvRequestEmail({ fullName, email, company, reason }).catch((error) => {
+    sendCvRequestEmail({ fullName, email, company, reason }).then((result) =>
+      CvRequest.updateOne({ _id: request._id }, {
+        $push: { notificationHistory: { status: 'accepted', providerId: result?.id || '' } }
+      })
+    ).catch((error) => {
       console.error('CV request notification failed:', error.message);
+      return CvRequest.updateOne({ _id: request._id }, {
+        $push: { notificationHistory: { status: 'failed', error: String(error.message).slice(0, 180) } }
+      }).catch(logError => console.error('Notification history update failed:', logError.message));
     });
 
     return res.status(201).json({
