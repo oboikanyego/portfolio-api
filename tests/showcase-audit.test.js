@@ -34,3 +34,19 @@ test('showcase audit never overwrites custom admin content or new projects', () 
   assert.deepEqual(v6.projects[0].caseStudy.approach,['Author decision']);
   assert.deepEqual(v6.projects.at(-1),v5.projects.at(-1));
 });
+
+test('curated case studies receive truthful architecture/challenge detail without overriding existing text', () => {
+  const v5 = migratePortfolioCms(defaults,defaults);
+  const result = enhanceShowcase(v5);
+  for (const name of ['KasiDrop','Mzansi Rent Lite','Genesis Kiddies Corner','Royal Treats']) {
+    const project=result.projects.find(p=>p.name===name);
+    assert.ok(project?.caseStudy?.architecture?.length >= 3,name);
+    assert.ok(project.caseStudy.challenges?.length > 0,name);
+    assert.ok(project.caseStudy.outcome,name);
+  }
+  const edited=structuredClone(v5);
+  const kasi=edited.projects.find(p=>p.name==='KasiDrop');
+  kasi.caseStudy.architecture=[{label:'My design',value:'Author-approved'}];
+  assert.deepEqual(enhanceShowcase(edited).projects.find(p=>p.name==='KasiDrop').caseStudy.architecture,
+    [{label:'My design',value:'Author-approved'}]);
+});

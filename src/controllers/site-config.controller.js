@@ -65,6 +65,14 @@ async function loadSiteConfig() {
           { new: true, runValidators: true }
         ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
       }
+      if ((document.contentVersion || 0) < 7) {
+        const config = enhanceShowcase(document.config || defaultConfig);
+        document = await SiteConfig.findOneAndUpdate(
+          { key: 'primary', contentVersion: { $lt: 7 } },
+          { $set: { config, contentVersion: 7 } },
+          { new: true, runValidators: true }
+        ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
+      }
       // Log public content metadata once per process, without contact details or secrets.
       // This makes the MongoDB migration verifiable through Render application logs.
       if (!contentStatusLogged) {
