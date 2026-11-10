@@ -1,0 +1,32 @@
+name: Production API quality audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_submissions:
+        description: 'Create one clearly labelled contact + CV test record and send two real notifications'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production-api-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Render, authenticated routes, form validation and notifications
+        env:
+          # A new workflow file merged to main runs this once with write tests enabled.
+          QA_WRITE_TESTS: ${{ github.event_name == 'push' || inputs.include_submissions }}
+          PORTFOLIO_API_URL: https://portfolio-api-d2en.onrender.com
+        run: node scripts/production-smoke.cjs

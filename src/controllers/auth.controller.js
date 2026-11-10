@@ -9,7 +9,9 @@ function cookieOptions() {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    // The Angular frontend talks through Netlify's same-origin /api proxy.
+    // Lax prevents cross-site cookie attachment without breaking admin sessions.
+    sameSite: 'lax',
     maxAge: 8 * 60 * 60 * 1000,
     path: '/'
   };

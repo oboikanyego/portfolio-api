@@ -36,7 +36,7 @@ exports.recordInteraction = async (req, res) => {
     const name = cleanString(req.body.name, 80);
     const label = cleanString(req.body.label, 160);
     const path = cleanString(req.body.path, 300) || '/';
-    const allowedEvents = new Set(['project_case_study', 'project_live', 'project_source', 'contact_submit', 'cv_request', 'social_link']);
+    const allowedEvents = new Set(['project_view', 'hire_me_click', 'discuss_project_click', 'request_cv_click', 'project_case_study', 'project_live', 'project_source', 'contact_submit', 'cv_request', 'social_link']);
 
     if (!visitorId || !sessionId || !allowedEvents.has(name)) {
       return res.status(400).json({ success: false, message: 'A valid analytics event is required.' });
@@ -62,28 +62,57 @@ exports.getVisitStats = async (req, res) => {
     start.setUTCHours(0, 0, 0, 0);
     start.setUTCDate(start.getUTCDate() - (days - 1));
 
-    const [daily, totalVisits, uniqueVisitors, conversions] = await Promise.all([
+    const period = { createdAt: { $gte: start } };
+    const [daily, totalVisits, uniqueVisitors, periodSessions, periodVisitors, conversions,
+      projectStats, contactStats, cvStats, contactSources, cvSources] = await Promise.all([
       Visit.aggregate([
-        { $match: { createdAt: { $gte: start } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' } },
-            visits: { $sum: 1 },
-            visitors: { $addToSet: '$visitorId' }
-          }
-        },
+        { $match: period },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'UTC' } },
+          visits: { $sum: 1 }, visitors: { $addToSet: '$visitorId' }
+        } },
         { $project: { _id: 0, date: '$_id', visits: 1, uniqueVisitors: { $size: '$visitors' } } },
         { $sort: { date: 1 } }
       ]),
       Visit.countDocuments(),
-      Visit.distinct('visitorId').then((ids) => ids.length),
+      Visit.distinct('visitorId').then(ids => ids.length),
+      Visit.countDocuments(period),
+      Visit.distinct('visitorId', period).then(ids => ids.length),
       InteractionEvent.aggregate([
-        { $match: { createdAt: { $gte: start } } },
+        { $match: period },
         { $group: { _id: '$name', count: { $sum: 1 } } },
         { $project: { _id: 0, name: '$_id', count: 1 } },
         { $sort: { count: -1 } }
+      ]),
+      InteractionEvent.aggregate([
+        { $match: { ...period, name: { $in: ['project_view', 'project_live'] }, label: { $ne: '' } } },
+        { $group: {
+          _id: '$label',
+          views: { $sum: { $cond: [{ $eq: ['$name','project_view'] },1,0] } },
+          demoClicks: { $sum: { $cond: [{ $eq: ['$name','project_live'] },1,0] } }
+        } },
+        { $project: { _id: 0, project: '$_id', views: 1, demoClicks: 1 } },
+        { $sort: { views: -1, demoClicks: -1 } },
+        { $limit: 12 }
+      ]),
+      require('../models/contact-message.model').countDocuments(period),
+      require('../models/cv-request.model').countDocuments(period),
+      require('../models/contact-message.model').aggregate([
+        { $match: period },
+        { $group: { _id: { $ifNull: ['$source','contact_page'] }, count: { $sum: 1 } } }
+      ]),
+      require('../models/cv-request.model').aggregate([
+        { $match: period },
+        { $group: { _id: { $ifNull: ['$source','request_cv'] }, count: { $sum: 1 } } }
       ])
     ]);
+    const sourceTotals = new Map();
+    for (const record of [...contactSources, ...cvSources]) {
+      const source = record._id || 'other';
+      sourceTotals.set(source,(sourceTotals.get(source) || 0) + record.count);
+    }
+    const leadSources = Array.from(sourceTotals,([source,count])=>({source,count}))
+      .sort((a,b)=>b.count-a.count);
 
     const byDate = new Map(daily.map((item) => [item.date, item]));
     const series = Array.from({ length: days }, (_, index) => {
@@ -100,7 +129,12 @@ exports.getVisitStats = async (req, res) => {
       uniqueVisitors,
       today: series.at(-1)?.visits || 0,
       series,
-      conversions
+      conversions,
+      periodSessions,
+      periodVisitors,
+      submissions: { contacts: contactStats, cvRequests: cvStats, total: contactStats + cvStats },
+      leadSources,
+      projectStats
     });
   } catch (error) {
     console.error('getVisitStats error:', error);

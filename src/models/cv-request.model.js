@@ -13,6 +13,7 @@ const cvRequestSchema = new mongoose.Schema(
       error: { type: String, default: '' },
       at: { type: Date, default: Date.now }
     }],
+    source: { type: String, trim: true, maxlength: 64, default: 'request_cv', index: true },
     fullName: { type: String, required: true, trim: true, maxlength: 120 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 180 },
     company: { type: String, trim: true, default: '', maxlength: 160 },
