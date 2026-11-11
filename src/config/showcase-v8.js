@@ -142,7 +142,7 @@ function completeVerifiedShowcase(config) {
       fillMissing(study,eatHealthyStudy);
     }
     if (slug === 'real-time-portfolio-risk-dashboard') {
-      if(blank(project.githubUrl))project.githubUrl='https://github.com/oboikanyego/portfolio-risk-ui';
+      // Risk UI repository is private; avoid sending visitors to an inaccessible source link.
       if(project.stack === 'Angular · Node.js · Socket.IO · SQL · Docker')
         project.stack='Angular · Node.js · Express · Socket.IO · MongoDB · Kraken API';
       upgradeKnownDefaults(study,slug,riskStudyCorrections);
@@ -154,6 +154,8 @@ function completeVerifiedShowcase(config) {
         project.description='An Angular and Express architecture foundation for a future authenticated chat platform, with deployment scaffolding and a working API health-check interface.';
       upgradeKnownDefaults(study,slug,correctedChatStudy);
       if(blank(project.previewCaption))project.previewCaption='Authentic locally built Angular scaffold · not a live chat demo';
+      if(blank(project.image))project.image='https://res.cloudinary.com/dv2hhefed/image/upload/v1794398278/bk-portfolio/projects/chat-foundation-desktop.png';
+      if(blank(project.mobileImage))project.mobileImage='https://res.cloudinary.com/dv2hhefed/image/upload/v1794398285/bk-portfolio/projects/chat-foundation-mobile.png';
     }
     if (slug === 'secure-authentication-system') {
       if(blank(project.githubUrl))project.githubUrl='https://github.com/oboikanyego/Freelance-Services-Platform_server';
@@ -161,6 +163,8 @@ function completeVerifiedShowcase(config) {
         project.description='JWT registration, login, role checks and password recovery demonstrated inside the FreelanceHub backend; not a standalone deployed application.';
       upgradeKnownDefaults(study,slug,correctedAuthStudy);
       if(blank(project.previewCaption))project.previewCaption='FreelanceHub sign-in screen · related implementation';
+      if(blank(project.image))project.image='https://res.cloudinary.com/dv2hhefed/image/upload/v1794398292/bk-portfolio/projects/freelance-auth-desktop.png';
+      if(blank(project.mobileImage))project.mobileImage='https://res.cloudinary.com/dv2hhefed/image/upload/v1794398300/bk-portfolio/projects/freelance-auth-mobile.png';
     }
   }
   return next;

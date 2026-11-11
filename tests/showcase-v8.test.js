@@ -5,7 +5,20 @@ const { migratePortfolioCms }=require('../src/config/portfolio-cms-migration');
 const { enhanceShowcase }=require('../src/config/showcase-audit');
 const { completeVerifiedShowcase }=require('../src/config/showcase-v8');
 
-const before=()=>enhanceShowcase(migratePortfolioCms(defaults,defaults));
+const before=()=>{
+  const next=enhanceShowcase(migratePortfolioCms(defaults,defaults));
+  // EatHealthy is a MongoDB-authored project added after the repository defaults.
+  next.projects.push({
+    name:'EatHealthy',slug:'eathealthy',
+    stack:'Angular · Node.js · Express · TypeScript · MongoDB',
+    description:'Budget-aware meal planning prototype for South African routines.',
+    liveUrl:'https://mzansiwell.netlify.app/',
+    githubUrl:'https://github.com/oboikanyego/mzansiwell',
+    image:'https://res.cloudinary.com/dv2hhefed/image/upload/v1794286663/bk-portfolio/projects/eathealthy-desktop.webp',
+    mobileImage:'',published:true,featured:false,caseStudy:{}
+  });
+  return next;
+};
 const get=(config,name)=>config.projects.find(x=>x.name===name);
 
 test('verified v8 migration completes EatHealthy only from documented prototype features',()=>{
@@ -38,7 +51,7 @@ test('v8 updates seeded risk architecture to documented MongoDB and Kraken imple
   const result=completeVerifiedShowcase(before());
   const risk=get(result,'Real-Time Portfolio Risk Dashboard');
   assert.equal(risk.liveUrl,'https://portfolio-risk-monitor.netlify.app/');
-  assert.equal(risk.githubUrl,'https://github.com/oboikanyego/portfolio-risk-ui');
+  assert.ok(!risk.githubUrl, 'private repository URL must not be added');
   assert.ok(risk.caseStudy.architecture.some(x=>x.label==='Market feed' && /Kraken/.test(x.value)));
   assert.match(risk.stack,/MongoDB/);
 });
@@ -59,4 +72,23 @@ test('migration is idempotent and does not overwrite admin-authored fields',()=>
     assert.equal(entry.githubUrl,'https://github.com/oboikanyego/custom');
   }
   assert.deepEqual(completeVerifiedShowcase(result),result);
+});
+
+
+test('v8 supplies authentic Cloudinary desktop/mobile evidence without claiming source-only projects are deployed',()=>{
+  const result=completeVerifiedShowcase(before());
+  for(const name of ['Real-Time Portfolio Risk Dashboard','Real-Time Chat System','Secure Authentication System']){
+    const p=get(result,name);
+    assert.match(p.image,/^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\/v\d+\/bk-portfolio\/projects\/.+\.png$/);
+    assert.match(p.mobileImage,/^https:\/\/res\.cloudinary\.com\/dv2hhefed\/image\/upload\/v\d+\/bk-portfolio\/projects\/.+\.png$/);
+    assert.ok(p.previewCaption, name + ' screenshot provenance required');
+  }
+  assert.equal(get(result,'Real-Time Chat System').liveUrl,'');
+  assert.equal(get(result,'Secure Authentication System').liveUrl,'');
+  assert.equal(result.projects.filter(p=>!p.image).length,0);
+  assert.equal(result.projects.filter(p=>!p.liveUrl).length,2);
+  assert.equal(result.projects.filter(p=>!p.caseStudy?.summary ||
+      !p.caseStudy?.challenge || !p.caseStudy?.outcome ||
+      !p.caseStudy?.approach?.length || !p.caseStudy?.architecture?.length ||
+      !p.caseStudy?.challenges?.length).length,0);
 });
