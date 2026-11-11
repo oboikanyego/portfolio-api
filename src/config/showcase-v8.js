@@ -147,6 +147,8 @@ function completeVerifiedShowcase(config) {
         project.stack='Angular · Node.js · Express · Socket.IO · MongoDB · Kraken API';
       upgradeKnownDefaults(study,slug,riskStudyCorrections);
       if (blank(project.previewCaption)) project.previewCaption='Live Portfolio Risk dashboard · public model holdings';
+      if(blank(project.image))project.image='https://res.cloudinary.com/dv2hhefed/image/upload/v1794398264/bk-portfolio/projects/portfolio-risk-desktop.png';
+      if(blank(project.mobileImage))project.mobileImage='https://res.cloudinary.com/dv2hhefed/image/upload/v1794398271/bk-portfolio/projects/portfolio-risk-mobile.png';
     }
     if (slug === 'real-time-chat-system') {
       if(blank(project.githubUrl))project.githubUrl='https://github.com/oboikanyego/real-time-chat-system';
