@@ -1,6 +1,7 @@
 const Visit = require('../models/visit.model');
 const InteractionEvent = require('../models/interaction-event.model');
 const { getPagination, paginatedResult } = require('../utils/pagination');
+const { notifyVisitIfDue } = require('../services/admin-push.service');
 
 exports.recordVisit = async (req, res) => {
   try {
@@ -13,11 +14,16 @@ exports.recordVisit = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Visitor and session IDs are required.' });
     }
 
-    await Visit.updateOne(
+    const result = await Visit.updateOne(
       { sessionId },
       { $setOnInsert: { visitorId, sessionId, path, referrer } },
       { upsert: true }
     );
+
+    // Alert only for a newly recorded session, and exclude obvious automated traffic.
+    if (result.upsertedCount === 1 && !/(bot|spider|crawler|headless|uptime|monitor|lighthouse|curl)/i.test(req.get('user-agent') || '')) {
+      notifyVisitIfDue().catch(error => console.error('Visit push failed:', error.message));
+    }
 
     return res.status(202).json({ success: true });
   } catch (error) {
