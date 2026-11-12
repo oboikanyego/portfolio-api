@@ -11,6 +11,7 @@ const siteConfigRoutes = require('./routes/site-config.routes');
 const mediaRoutes = require('./routes/media.routes');
 const adminInboxRoutes = require('./routes/admin-inbox.routes');
 const emailTemplateRoutes = require('./routes/email-template.routes');
+const adminPushRoutes = require('./routes/admin-push.routes');
 const { globalApiLimiter } = require('./middleware/rate-limit.middleware');
 
 const app = express();
@@ -57,6 +58,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/admin/inbox', adminInboxRoutes);
+app.use('/api/admin/push', adminPushRoutes);
 app.use('/api/admin/email-templates', emailTemplateRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/auth', authRoutes);

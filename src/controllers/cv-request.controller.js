@@ -2,6 +2,7 @@ const CvRequest = require('../models/cv-request.model');
 const { cleanLeadSource } = require('../utils/lead-source');
 const { sendCvRequestEmail } = require('../services/mail.service');
 const { getPagination, paginatedResult } = require('../utils/pagination');
+const { notifyOwner } = require('../services/admin-push.service');
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,6 +22,13 @@ exports.createCvRequest = async (req, res) => {
     }
 
     const request = await CvRequest.create({ fullName, email, company, reason, source });
+
+    notifyOwner({
+      kind: 'cvRequests',
+      title: 'New CV request',
+      body: 'A recruiter or visitor requested your CV. Open the admin inbox.',
+      path: '/admin/inbox'
+    }).catch(error => console.error('CV request push failed:', error.message));
 
     sendCvRequestEmail({ fullName, email, company, reason, source }).then((result) =>
       CvRequest.updateOne({ _id: request._id }, {
