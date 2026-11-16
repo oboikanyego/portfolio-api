@@ -26,7 +26,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB_NAME
-        sync: false # Must match the existing Atlas database before switching
+        sync: false # Existing database verified on Render: job_platform. Set this in private environment variables.
       - key: CLOUDINARY_CLOUD_NAME
         value: dv2hhefed
       - key: CLOUDINARY_API_KEY
