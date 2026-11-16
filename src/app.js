@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 const contactRoutes = require('./routes/contact.routes');
 const authRoutes = require('./routes/auth.routes');
 const cvRequestRoutes = require('./routes/cv-request.routes');
@@ -42,6 +43,21 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(morgan('dev'));
+// A live ping checks the configured database even if Mongoose still reports connected.
+app.get(['/api/health/ready', '/health/ready'], globalApiLimiter, async (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const { db, readyState } = mongoose.connection;
+    if (readyState === 1 && db) {
+      await db.command({ ping: 1 }, { timeoutMS: 2000 });
+      return res.json({ status: 'ready' });
+    }
+  } catch {
+    // The response is intentionally limited to readiness status.
+  }
+  return res.status(503).json({ status: 'unavailable' });
+});
+
 app.use('/api', (req, res, next) => {
   if (req.path === '/health') {
     return next();
