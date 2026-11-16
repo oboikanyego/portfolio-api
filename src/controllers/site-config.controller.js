@@ -73,6 +73,32 @@ async function loadSiteConfig() {
           { new: true, runValidators: true }
         ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
       }
+      if ((document.contentVersion || 0) < 8) {
+        const careerSteps = document.config?.careerSteps;
+        const updates = { contentVersion: 8 };
+        if (Array.isArray(careerSteps)) {
+          updates['config.careerSteps'] = careerSteps.map(step => {
+            if (step.company !== 'Neutrinos') return step;
+            if (step.role === 'Associate Software Engineer' && step.period === 'Aug 2022 — Dec 2024') {
+              return { ...step, period: 'Aug 2022 — Jul 2023' };
+            }
+            if (step.role === 'Intermediate Software Engineer' && step.period === 'Jan 2025 — Present') {
+              return { ...step, progressionDate: 'Jul ’23', period: 'Jul 2023 — Present' };
+            }
+            return step;
+          });
+        }
+
+        // Guard against saving an editor's older snapshot over a concurrent CMS edit.
+        document = await SiteConfig.findOneAndUpdate(
+          { key: 'primary', contentVersion: { $lt: 8 }, updatedAt: document.updatedAt },
+          { $set: updates },
+          { new: true, runValidators: true }
+        ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
+        if ((document?.contentVersion || 0) < 8) {
+          throw new Error('Portfolio content changed during the career date migration; retry the load.');
+        }
+      }
       // Log public content metadata once per process, without contact details or secrets.
       // This makes the MongoDB migration verifiable through Render application logs.
       if (!contentStatusLogged) {
