@@ -33,9 +33,12 @@ test('readiness returns 503 when disconnected while liveness stays healthy', asy
 });
 
 test('readiness pings MongoDB and hides connection errors', async t => {
-  t.mock.getter(mongoose.connection, 'readyState', () => 1);
+  Object.defineProperty(mongoose.connection, 'readyState', { value: 1, configurable: true });
   const originalDb = mongoose.connection.db;
-  t.after(() => { mongoose.connection.db = originalDb; });
+  t.after(() => {
+    delete mongoose.connection.readyState;
+    mongoose.connection.db = originalDb;
+  });
   let available = true;
   mongoose.connection.db = {
     async command(query, options) {
