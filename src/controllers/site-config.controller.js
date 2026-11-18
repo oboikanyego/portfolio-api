@@ -4,6 +4,7 @@ const { summarizePublicConfig } = require('../utils/public-content-status');
 const { migratePortfolioCms } = require('../config/portfolio-cms-migration');
 const { validateSiteConfig } = require('../utils/validate-site-config');
 const { enhanceShowcase } = require('../config/showcase-audit');
+const { completeVerifiedShowcase } = require('../config/showcase-v8');
 const { triggerSeoRebuild, validBuildHook } = require('../services/seo-rebuild.service');
 
 const memoryCacheTtlMs = Number(process.env.SITE_CONFIG_CACHE_TTL_MS) || 5 * 60 * 1000;
@@ -97,6 +98,19 @@ async function loadSiteConfig() {
         ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
         if ((document?.contentVersion || 0) < 8) {
           throw new Error('Portfolio content changed during the career date migration; retry the load.');
+        }
+      }
+      if ((document.contentVersion || 0) < 9) {
+        const { projects } = completeVerifiedShowcase(document.config || defaultConfig);
+        const updates = { contentVersion: 9 };
+        if (Array.isArray(projects)) updates['config.projects'] = projects;
+        document = await SiteConfig.findOneAndUpdate(
+          { key: 'primary', contentVersion: { $lt: 9 }, updatedAt: document.updatedAt },
+          { $set: updates },
+          { new: true, runValidators: true }
+        ).lean() || await SiteConfig.findOne({ key: 'primary' }).lean();
+        if ((document?.contentVersion || 0) < 9) {
+          throw new Error('Portfolio content changed during the showcase migration; retry the load.');
         }
       }
       // Log public content metadata once per process, without contact details or secrets.

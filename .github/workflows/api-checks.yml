@@ -19,3 +19,5 @@ jobs:
       - run: npm test
       - run: node --check src/controllers/site-config.controller.js
       - run: node --check src/app.js
+      - name: Audit published project evidence and live demo endpoints
+        run: node scripts/audit-live-showcase.js
