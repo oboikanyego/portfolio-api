@@ -31,3 +31,17 @@ Build-time static HTML snapshots still provide a crawler fallback but are **not 
 `.github/workflows/production-api-audit.yml` performs a safe public endpoint audit, checks admin access controls, media restrictions, CORS and input validation. Its first merge triggers a **single** clearly tagged production contact and CV request. Those two records persist in the production admin inbox and send real notification emails to the configured recipient. Subsequent scheduled checks are deliberately **not** enabled, to avoid test spam. Manual runs are read-only by default; enable the `include_submissions` input only when a new end-to-end form test is necessary.
 
 A 201 response verifies persistence, not Resend email delivery. An authenticated admin must check the notification history/Resend delivery data separately. Browser-level admin login and Cloudinary uploads are tested with local fixtures rather than using production admin credentials.
+
+
+### MongoDB connection (separate URI and database)
+
+The portfolio API explicitly connects using the `MONGODB_URI` and `MONGODB_DB_NAME` environment variables. Example:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-host>/?retryWrites=true&w=majority
+MONGODB_DB_NAME=job_platform
+```
+
+The live Render service was verified to use MongoDB database **`job_platform`** before setting its `MONGODB_DB_NAME` variable. `mongoose.connect(uri, { dbName })` selects that database even if the URI has a different database path. Both the connection URI and the DB name must be present or startup fails safely (instead of creating/using an unintended default database). Keep the URI secret in Render.
+
+`MONGO_URI` remains temporarily supported *only as a legacy alias* to avoid downtime if the existing Render secret is named that way. `MONGODB_URI` always takes priority. The startup log reports which **variable name**, never the URI's contents, was used, so you can verify the migration and remove the alias afterwards.

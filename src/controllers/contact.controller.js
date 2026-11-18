@@ -2,6 +2,7 @@ const ContactMessage = require('../models/contact-message.model');
 const { cleanLeadSource } = require('../utils/lead-source');
 const { sendContactEmail } = require('../services/mail.service');
 const { getPagination, paginatedResult } = require('../utils/pagination');
+const { notifyOwner } = require('../services/admin-push.service');
 
 exports.createContact = async (req, res) => {
   try {
@@ -33,6 +34,13 @@ exports.createContact = async (req, res) => {
     });
 
     await contact.save();
+
+    notifyOwner({
+      kind: 'enquiries',
+      title: 'New portfolio enquiry',
+      body: 'A new contact request is waiting in your admin inbox.',
+      path: '/admin/inbox'
+    }).catch(error => console.error('Contact push failed:', error.message));
 
     // Keep the saved enquiry successful even if notification delivery fails.
     sendContactEmail({

@@ -26,7 +26,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB_NAME
-        sync: false # Must match the existing Atlas database before switching
+        sync: false # Existing database verified on Render: job_platform. Set this in private environment variables.
       - key: CLOUDINARY_CLOUD_NAME
         value: dv2hhefed
       - key: CLOUDINARY_API_KEY
@@ -46,4 +46,21 @@ services:
       - key: ADMIN_PASSWORD_HASH
         sync: false
       - key: AUTH_TOKEN_SECRET
+        sync: false
+      # Owner-only FCM web configuration and private service credentials.
+      - key: FIREBASE_API_KEY
+        sync: false
+      - key: FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_APP_ID
+        sync: false
+      - key: FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: FIREBASE_VAPID_PUBLIC_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
         sync: false

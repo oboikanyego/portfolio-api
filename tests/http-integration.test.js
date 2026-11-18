@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../src/app');
+const mongoose = require('mongoose');
 
 async function withServer(run) {
   const server = app.listen(0, '127.0.0.1');
@@ -18,6 +19,44 @@ test('health endpoint responds without database access and has security headers'
     assert.equal(r.status, 200);
     assert.equal((await r.json()).status, 'ok');
     assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+  });
+});
+
+test('readiness returns 503 when disconnected while liveness stays healthy', async () => {
+  await withServer(async base => {
+    const response = await fetch(base + '/api/health/ready');
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.deepEqual(await response.json(), { status: 'unavailable' });
+    assert.equal((await fetch(base + '/api/health')).status, 200);
+  });
+});
+
+test('readiness pings MongoDB and hides connection errors', async t => {
+  Object.defineProperty(mongoose.connection, 'readyState', { value: 1, configurable: true });
+  const originalDb = mongoose.connection.db;
+  t.after(() => {
+    delete mongoose.connection.readyState;
+    mongoose.connection.db = originalDb;
+  });
+  let available = true;
+  mongoose.connection.db = {
+    async command(query, options) {
+      assert.deepEqual(query, { ping: 1 });
+      assert.deepEqual(options, { timeoutMS: 2000 });
+      if (!available) throw new Error('private MongoDB details');
+      return { ok: 1 };
+    }
+  };
+
+  await withServer(async base => {
+    const ready = await fetch(base + '/health/ready');
+    assert.equal(ready.status, 200);
+    assert.deepEqual(await ready.json(), { status: 'ready' });
+    available = false;
+    const unavailable = await fetch(base + '/api/health/ready');
+    assert.equal(unavailable.status, 503);
+    assert.deepEqual(await unavailable.json(), { status: 'unavailable' });
   });
 });
 
